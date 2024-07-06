@@ -1,0 +1,120 @@
+import seresVivos.*
+import materias.*
+import hechizos.*
+import casas.*
+
+//hechizos
+const inmobilus = new Hechizo(dificultad = 15)
+const aberto = new Hechizo(dificultad = 0)
+const aguamenti = new Hechizo(dificultad = 5)
+const aparecium = new Hechizo(dificultad = 3)
+const avadaKedabra = new HechizoImperdonable(danioPropio = 10, dificultad = 100)
+const florecio = new HechizoFeliz(dificultad = 0)
+
+//estudiantes
+const harry = new Estudiante(casa = gryffindor, esPuraSangre = false, salud = 100,hechizosAprendidos = [aberto],habilidad=150)
+const ron = new Estudiante(casa = gryffindor, esPuraSangre = false, salud = 100,hechizosAprendidos = [aguamenti],habilidad=4)
+const hermione = new Estudiante(casa = gryffindor, esPuraSangre = false, salud = 100,hechizosAprendidos = [aparecium],habilidad=80)
+const draco = new Estudiante(casa = slytherin, esPuraSangre = true, salud = 100)
+		
+describe "materia defensa contra las artes oscuros"{
+	//profesor
+	const severus = new SerVivo(salud = 50)
+	
+	//materia
+	const dcao = new Materia(profesor = severus, hechizoEnseniado = inmobilus)
+	
+	//criatura
+	const lechuza = new CriaturaMagica(salud = 100)
+	
+	test "los tres se inscriben en dcao" {
+		harry.inscribirse(dcao)
+		ron.inscribirse(dcao)
+		hermione.inscribirse(dcao)
+		assert.that(harry.materiasInscritas().contains(dcao))
+		assert.that(ron.materiasInscritas().contains(dcao))
+		assert.that(hermione.materiasInscritas().contains(dcao))
+	}
+	test "se dicta dcao, harry y hermione aprenden"{
+		harry.inscribirse(dcao)
+		hermione.inscribirse(dcao)
+		dcao.dictar()
+		assert.equals([aberto,inmobilus],harry.hechizosAprendidos())
+		assert.equals([aparecium,inmobilus],hermione.hechizosAprendidos())
+	}
+	test "ron no puede aprender inmobilus"{
+		assert.throwsException({
+			ron.inscribirse(dcao)
+			dcao.dictar()
+		}) 
+	}
+	test "harry lanza inmobilus a lechuza"{
+		harry.inscribirse(dcao)
+		dcao.dictar()
+		harry.lanzarHechizo(lechuza, inmobilus)
+		assert.equals(75,lechuza.salud())
+	}
+	test "ron no lanza inmobilus porque no lo puede aprender"{
+		assert.throwsExceptionWithMessage("el alumno no sabe usar este hechizo",{
+			ron.lanzarHechizo(lechuza, inmobilus)
+		})
+	}
+}
+
+describe "harry aprende y usa avadaKadabra"{
+	const voldemort = new SerVivo(salud = 1000)
+	const claseAveda = new Materia(profesor = voldemort, hechizoEnseniado = avadaKedabra)
+	const enemigo = new CriaturaMagica(salud = 200)
+	
+	test "harry aprende avadaKedabra"{
+		harry.inscribirse(claseAveda)
+		claseAveda.dictar()
+		assert.equals([aberto,avadaKedabra],harry.hechizosAprendidos())
+	}
+	
+	test "harry usa avadaKedabra"{
+		harry.inscribirse(claseAveda)
+		claseAveda.dictar()
+		harry.lanzarHechizo(enemigo, avadaKedabra)
+		assert.equals(90,harry.salud())
+		assert.equals(0,enemigo.salud())
+	}
+}
+
+describe "hermione aprende y usa aguamenti"{
+	const alexis = new SerVivo(salud = 80)
+	const claseAgua = new Materia(profesor = alexis, hechizoEnseniado = aguamenti)
+	const enemigo = new CriaturaMagica(salud = 100)
+	
+	test "hermione aprende aguamenti"{
+		hermione.inscribirse(claseAgua)
+		claseAgua.dictar()
+		assert.equals([aparecium,aguamenti],hermione.hechizosAprendidos())
+	}
+	
+	test "hermione usa aguamenti"{
+		hermione.inscribirse(claseAgua)
+		claseAgua.dictar()
+		hermione.lanzarHechizo(enemigo, aguamenti)
+		assert.equals(85,enemigo.salud())
+	}
+}
+
+describe"draco aprende y usa florecio"{
+	const cristian = new SerVivo(salud = 10)
+	const claseFlorecio = new Materia(profesor = cristian, hechizoEnseniado = florecio)
+	const enemigo = new CriaturaMagica(salud = 100)
+	
+	test "draco aprende florecio"{
+		draco.inscribirse(claseFlorecio)
+		claseFlorecio.dictar()
+		assert.equals([florecio],draco.hechizosAprendidos())
+	}
+	test "draco usa florecio y cambia su casa"{
+		draco.inscribirse(claseFlorecio)
+		claseFlorecio.dictar()
+		draco.lanzarHechizo(enemigo, florecio)
+		assert.equals(90,enemigo.salud())
+		assert.equals(gryffindor,draco.casa())
+	}
+}
